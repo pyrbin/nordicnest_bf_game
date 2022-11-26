@@ -3,6 +3,7 @@ pub mod prelude;
 use bevy::core_pipeline::clear_color::{self, ClearColorConfig};
 use bevy_asset_loader::prelude::*;
 use bevy_embedded_assets::EmbeddedAssetPlugin;
+use bevy_mod_fbx::FbxPlugin;
 pub use prelude::*;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -35,7 +36,8 @@ pub fn setup_app(app: &mut App) -> &mut App {
     )
     .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
     .add_plugin(RapierDebugRenderPlugin::default())
-    .add_plugin(Sprite3dPlugin);
+    .add_plugin(Sprite3dPlugin)
+    .add_plugin(FbxPlugin);
 
     app.add_state(GameState::Loading)
         .add_loading_state(
@@ -46,6 +48,7 @@ pub fn setup_app(app: &mut App) -> &mut App {
         .add_system_set(
             SystemSet::on_enter(GameState::Ready)
                 .with_system(setup)
+                .with_system(setup_truck)
                 .with_system(setup_ground),
         )
         .add_system_set(SystemSet::on_update(GameState::Ready).with_system(player_movement));
@@ -57,6 +60,14 @@ struct Player;
 
 #[derive(Component)]
 struct FaceCamera;
+
+fn setup_truck(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn((SceneBundle {
+        scene: asset_server.load("models/truck.fbx"),
+        transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0)),
+        ..default()
+    },));
+}
 
 fn setup(mut commands: Commands, images: Res<ImageAssets>, mut sprite_params: Sprite3dParams) {
     // camera
