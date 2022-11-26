@@ -11,6 +11,7 @@ use bevy_embedded_assets::EmbeddedAssetPlugin;
 pub use crate::parcels::*;
 pub use crate::ui::*;
 pub use crate::warehouse::*;
+use bevy_mod_fbx::FbxPlugin;
 pub use prelude::*;
 
 #[derive(AssetCollection, Resource)]
@@ -46,7 +47,8 @@ pub fn setup_app(app: &mut App) -> &mut App {
     .add_plugin(Sprite3dPlugin)
     .add_plugin(ParcelsPlugin)
     .add_plugin(WarehousePlugin)
-    .add_plugin(UiPlugin);
+    .add_plugin(UiPlugin)
+    .add_plugin(FbxPlugin);
 
     app.add_state(GameState::Loading)
         .add_loading_state(
@@ -54,6 +56,11 @@ pub fn setup_app(app: &mut App) -> &mut App {
                 .continue_to_state(GameState::Ready)
                 .with_collection::<ImageAssets>()
                 .with_collection::<FontAssets>(),
+        )
+        .add_system_set(
+            SystemSet::on_enter(GameState::Ready)
+                .with_system(setup)
+                .with_system(setup_truck),
         )
         .add_system_set(SystemSet::on_enter(GameState::Ready).with_system(setup))
         .add_system_set(SystemSet::on_update(GameState::Ready).with_system(player_movement));
@@ -65,6 +72,14 @@ struct Player;
 
 #[derive(Component)]
 struct FaceCamera;
+
+fn setup_truck(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn((SceneBundle {
+        scene: asset_server.load("models/truck.fbx"),
+        transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0)),
+        ..default()
+    },));
+}
 
 fn setup(mut commands: Commands, images: Res<ImageAssets>, mut sprite_params: Sprite3dParams) {
     // camera
