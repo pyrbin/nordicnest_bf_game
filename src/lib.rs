@@ -1,4 +1,7 @@
+mod debug;
+mod game_over;
 mod parcels;
+mod player;
 pub mod prelude;
 mod state;
 mod ui;
@@ -7,17 +10,33 @@ mod warehouse;
 use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy_asset_loader::prelude::*;
 use bevy_embedded_assets::EmbeddedAssetPlugin;
+use bevy_inspector_egui::WorldInspectorPlugin;
 
+pub use crate::game_over::*;
 pub use crate::parcels::*;
+pub use crate::player::*;
 pub use crate::ui::*;
 pub use crate::warehouse::*;
-use bevy_mod_fbx::FbxPlugin;
 pub use prelude::*;
 
 #[derive(AssetCollection, Resource)]
+pub struct ModelAssets {
+    #[asset(path = "models/truck.glb#Scene0")]
+    truck: Handle<Scene>,
+}
+
+#[derive(AssetCollection, Resource)]
 pub struct ImageAssets {
-    #[asset(path = "textures/nordicnest_bird.png")]
+    #[asset(path = "images/nordicnest_bird.png")]
     bird: Handle<Image>,
+    #[asset(path = "images/dhl.png")]
+    dhl: Handle<Image>,
+    #[asset(path = "images/postnord.png")]
+    postnord: Handle<Image>,
+    #[asset(path = "images/bring.png")]
+    bring: Handle<Image>,
+    #[asset(path = "images/budbee.png")]
+    budbee: Handle<Image>,
 }
 
 #[derive(AssetCollection, Resource)]
@@ -34,6 +53,7 @@ pub fn setup_app(app: &mut App) -> &mut App {
                 window: WindowDescriptor {
                     width: 1080.0,
                     height: 1080.0 * 3. / 4.,
+                    title: "Black Friday".to_string(),
                     ..default()
                 },
 
@@ -42,49 +62,42 @@ pub fn setup_app(app: &mut App) -> &mut App {
             .build()
             .add_before::<AssetPlugin, EmbeddedAssetPlugin>(EmbeddedAssetPlugin),
     )
+    .add_plugin(WorldInspectorPlugin::new())
     .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
     //.add_plugin(RapierDebugRenderPlugin::default())
+    .add_plugin(DebugLinesPlugin::with_depth_test(true))
     .add_plugin(Sprite3dPlugin)
+    .add_plugin(PlayerPlugin)
     .add_plugin(ParcelsPlugin)
     .add_plugin(WarehousePlugin)
-    .add_plugin(UiPlugin)
-    .add_plugin(FbxPlugin);
+    .add_plugin(OutlinePlugin)
+    .add_plugin(UiPlugin);
 
     app.add_state(GameState::Loading)
         .add_loading_state(
             LoadingState::new(GameState::Loading)
                 .continue_to_state(GameState::Ready)
                 .with_collection::<ImageAssets>()
-                .with_collection::<FontAssets>(),
-        )
-        .add_system_set(
-            SystemSet::on_enter(GameState::Ready)
-                .with_system(setup)
-                .with_system(setup_truck),
+                .with_collection::<FontAssets>()
+                .with_collection::<ModelAssets>(),
         )
         .add_system_set(SystemSet::on_enter(GameState::Ready).with_system(setup))
-        .add_system_set(SystemSet::on_update(GameState::Ready).with_system(player_movement));
+        .add_system_set(SystemSet::on_update(GameState::Ready).with_system(check_game_over));
     app
 }
 
-#[derive(Component)]
-struct Player;
+#[derive(Resource)]
+pub struct TimeRemaining {
+    pub timer: Timer,
+}
 
 #[derive(Component)]
 struct FaceCamera;
 
-fn setup_truck(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn((SceneBundle {
-        scene: asset_server.load("models/truck.fbx"),
-        transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0)),
-        ..default()
-    },));
-}
-
-fn setup(mut commands: Commands, images: Res<ImageAssets>, mut sprite_params: Sprite3dParams) {
+fn setup(mut commands: Commands) {
     // camera
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 12.0, 20.0).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(0.0, 13.0, 22.0).looking_at(Vec3::ZERO, Vec3::Y),
         projection: bevy::prelude::Projection::Perspective(PerspectiveProjection::default()),
         camera: Camera { ..default() },
         camera_3d: Camera3d {
@@ -94,48 +107,18 @@ fn setup(mut commands: Commands, images: Res<ImageAssets>, mut sprite_params: Sp
         ..Default::default()
     });
 
-    // player
-    commands.spawn((
-        Sprite3d {
-            image: images.bird.clone(),
-            pixels_per_metre: 800.,
-            partial_alpha: true,
-            unlit: true,
-            ..default()
-        }
-        .bundle(&mut sprite_params),
-        Collider::capsule(Vec3::Y / 2., Vec3::ZERO, 0.4),
-        RigidBody::KinematicVelocityBased,
-        Velocity::default(),
-        KinematicCharacterController {
-            slide: true,
-            apply_impulse_to_dynamic_bodies: true,
-            ..default()
-        },
-        FaceCamera,
-        Player,
-    ));
+    commands.insert_resource(TimeRemaining {
+        timer: Timer::from_seconds(config::GAME_TIME, TimerMode::Once),
+    });
 }
 
-fn player_movement(
+fn check_game_over(
+    mut app_state: ResMut<State<GameState>>,
     time: Res<Time>,
-    keyboard_input: Res<Input<KeyCode>>,
-    mut query: Query<&mut Velocity, With<Player>>,
+    mut time_remaining: ResMut<TimeRemaining>,
 ) {
-    let mut vel = query.single_mut();
-    let mut delta = Vec3::ZERO;
-    if keyboard_input.pressed(KeyCode::W) {
-        delta -= Vec3::Z;
+    time_remaining.timer.tick(time.delta());
+    if time_remaining.timer.finished() {
+        app_state.set(GameState::GameOver).unwrap();
     }
-    if keyboard_input.pressed(KeyCode::S) {
-        delta += Vec3::Z;
-    }
-    if keyboard_input.pressed(KeyCode::A) {
-        delta -= Vec3::X;
-    }
-    if keyboard_input.pressed(KeyCode::D) {
-        delta += Vec3::X;
-    }
-
-    vel.linvel = delta.normalize_or_zero() * time.delta_seconds() * config::PLAYER_SPEED;
 }

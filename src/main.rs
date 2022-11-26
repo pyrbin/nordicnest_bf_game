@@ -13,7 +13,7 @@ fn main() {
 
 fn set_window_icon(windows: NonSend<WinitWindows>) {
     let primary = windows.get_window(WindowId::primary()).unwrap();
-    let icon_buf = Cursor::new(include_bytes!("../assets/textures/bevy.png"));
+    let icon_buf = Cursor::new(include_bytes!("../assets/images/nordicnest_bird.png"));
     if let Ok(image) = image::load(icon_buf, image::ImageFormat::Png) {
         let image = image.into_rgba8();
         let (width, height) = image.dimensions();
