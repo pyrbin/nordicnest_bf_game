@@ -39,7 +39,7 @@ fn setup_menu(
             parent.spawn(TextBundle {
                 text: Text {
                     sections: vec![TextSection {
-                        value: format!(" Score: {:?} ", score.score).to_string(),
+                        value: format!(" Score: {:?} ", score.score),
                         style: TextStyle {
                             font: font_assets.montserrat.clone(),
                             font_size: 40.0,

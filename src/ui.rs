@@ -18,7 +18,7 @@ pub struct GameTime;
 fn setup_ui(mut commands: Commands, font_assets: Res<FontAssets>, score: Res<Score>) {
     commands.spawn((
         TextBundle::from_section(
-            format!("{:.1$}", score.score, 0).to_string(),
+            format!("{:.1$}", score.score, 0),
             TextStyle {
                 font: font_assets.montserrat.clone(),
                 font_size: 60.0,
@@ -44,7 +44,7 @@ fn setup_ui(mut commands: Commands, font_assets: Res<FontAssets>, score: Res<Sco
 
     commands.spawn((
         TextBundle::from_section(
-            format!("{:.1$}", score.score, 0).to_string(),
+            format!("{:.1$}", score.score, 0),
             TextStyle {
                 font: font_assets.montserrat.clone(),
                 font_size: 60.0,
@@ -56,7 +56,7 @@ fn setup_ui(mut commands: Commands, font_assets: Res<FontAssets>, score: Res<Sco
             position_type: PositionType::Absolute,
             position: UiRect {
                 bottom: Val::Px(5.0),
-                left: Val::Percent(44.0),
+                left: Val::Percent(46.0),
                 ..default()
             },
             max_size: Size {

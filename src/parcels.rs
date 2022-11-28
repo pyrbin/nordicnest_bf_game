@@ -101,7 +101,7 @@ fn spawn_parcels(
             PbrBundle {
                 mesh: meshes.add(cube_mesh),
                 material: materials.add(StandardMaterial {
-                    base_color: agent_code.color().into(),
+                    base_color: agent_code.color(),
                     base_color_texture: match agent_code {
                         AgentServiceCode::PostNord => Some(texture_assets.postnord.clone()),
                         AgentServiceCode::DHL => Some(texture_assets.dhl.clone()),
@@ -139,7 +139,7 @@ fn spawn_parcels(
                 },
                 ..default()
             },
-            Name::new(format!("Parcel")),
+            Name::new("Parcel".to_string()),
         ))
         .set_parent(spawner.parent);
 

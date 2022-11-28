@@ -194,7 +194,7 @@ fn parcel_stack_events(
                         .set_parent(spawner.parent);
 
                     if let Ok((mut transform, mut velocity, _, global)) = parcels.get_mut(parcel) {
-                        transform.translation = global.translation().clone();
+                        transform.translation = global.translation();
 
                         if let Some(pos) = mouse_pos.0 {
                             let linvel = ((pos - transform.translation)
@@ -264,7 +264,7 @@ fn parcel_awarness(
     for (pos, entity) in closest.within_distance(player_transform.translation, PLAYER_PICKUP_RADIUS)
     {
         let dist = pos.distance(player_transform.translation);
-        if let Ok(_) = parcels.get_mut(entity) {
+        if parcels.get_mut(entity).is_ok() {
             if let Some((_, min_dist)) = min {
                 if dist < min_dist {
                     min = Some((entity, dist));
@@ -405,13 +405,11 @@ fn player_movement(
 
     // check if new position is in bounds of ground
     let new_pos = transform.translation + delta;
-    if new_pos.x > -config::GROUND_SIZE / 2.0
-        && new_pos.x < config::GROUND_SIZE / 2.0
-        && new_pos.z > -config::GROUND_SIZE / 2.0
-        && new_pos.z < config::GROUND_SIZE / 2.0
+    if new_pos.x <= -config::GROUND_SIZE / 2.0 - 2.0
+        || new_pos.x >= config::GROUND_SIZE / 2.0 + 2.0
+        || new_pos.z <= -config::GROUND_SIZE / 2.0 - 2.0
+        || new_pos.z >= config::GROUND_SIZE / 2.0 + 2.0
     {
-        delta = delta;
-    } else {
         delta = Vec3::ZERO;
     }
 

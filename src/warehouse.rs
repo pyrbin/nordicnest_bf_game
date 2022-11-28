@@ -122,12 +122,11 @@ fn setup_ground(
                         ),
                         scale: Vec3::ONE * 0.05,
                         rotation: Quat::from_rotation_y((rot as f32).to_radians()),
-                        ..Default::default()
                     },
                     ..Default::default()
                 },
                 Truck,
-                Name::new(format!("Truck")),
+                Name::new("Truck".to_string()),
             ))
             .id();
 
@@ -138,7 +137,7 @@ fn setup_ground(
                         size: config::GROUND_SIZE,
                     })),
                     material: materials.add(StandardMaterial {
-                        base_color: code.color().into(),
+                        base_color: code.color(),
                         base_color_texture: match code {
                             AgentServiceCode::PostNord => Some(texture_assets.postnord.clone()),
                             AgentServiceCode::DHL => Some(texture_assets.dhl.clone()),
@@ -165,7 +164,7 @@ fn setup_ground(
                     config::GROUND_DEPTH / 2.0,
                     config::GROUND_SIZE / 2.0,
                 ),
-                Name::new(format!("Shipping Area")),
+                Name::new("Shipping Area".to_string()),
             ))
             .with_children(|b| {
                 b.spawn((
@@ -217,75 +216,70 @@ fn collect_parcels(
     )>,
 ) {
     for event in collisions.iter() {
-        match event {
-            CollisionEvent::Started(e1, e2, _) => {
-                // check if collision is between a parcel and a shipping area
+        if let CollisionEvent::Started(e1, e2, _) = event {
+            // check if collision is between a parcel and a shipping area
 
-                let mut parcel = if let Ok(parcel) = parcels.get_mut(*e1) {
-                    parcel
-                } else if let Ok(parcel) = parcels.get_mut(*e2) {
-                    parcel
-                } else {
-                    continue;
-                };
+            let mut parcel = if let Ok(parcel) = parcels.get_mut(*e1) {
+                parcel
+            } else if let Ok(parcel) = parcels.get_mut(*e2) {
+                parcel
+            } else {
+                continue;
+            };
 
-                let mut shipping_area = if let Ok(shipping_area) = shipping_areas.get_mut(*e1) {
-                    shipping_area
-                } else if let Ok(shipping_area) = shipping_areas.get_mut(*e2) {
-                    shipping_area
-                } else {
-                    continue;
-                };
+            let mut shipping_area = if let Ok(shipping_area) = shipping_areas.get_mut(*e1) {
+                shipping_area
+            } else if let Ok(shipping_area) = shipping_areas.get_mut(*e2) {
+                shipping_area
+            } else {
+                continue;
+            };
 
-                let (score, despawn_timer) = if (*parcel.3) != (*shipping_area.3) {
-                    (-1, 600)
-                } else {
-                    (1, 600)
-                };
+            let (score, despawn_timer) = if (*parcel.3) != (*shipping_area.3) {
+                (-1, 600)
+            } else {
+                (1, 600)
+            };
 
-                // despawn parcel
-                commands
-                    .entity(parcel.0)
-                    .remove::<Parcel>()
-                    .insert(Picked)
-                    .insert(Animator::new(
-                        Tween::new(
-                            EaseFunction::QuadraticInOut,
-                            Duration::from_millis(despawn_timer),
-                            TransformScaleLens {
-                                start: Vec3::new(1., 1., 1.),
-                                end: Vec3::new(0.0, 0.0, 0.0),
-                            },
-                        )
-                        .with_repeat_count(RepeatCount::Finite(1)),
-                    ))
-                    .insert(Despawn::from_millis(despawn_timer));
+            // despawn parcel
+            commands
+                .entity(parcel.0)
+                .remove::<Parcel>()
+                .insert(Picked)
+                .insert(Animator::new(
+                    Tween::new(
+                        EaseFunction::QuadraticInOut,
+                        Duration::from_millis(despawn_timer),
+                        TransformScaleLens {
+                            start: Vec3::new(1., 1., 1.),
+                            end: Vec3::new(0.0, 0.0, 0.0),
+                        },
+                    )
+                    .with_repeat_count(RepeatCount::Finite(1)),
+                ))
+                .insert(Despawn::from_millis(despawn_timer));
 
-                if let Some(p) = closest_parcel.0 {
-                    if p == parcel.0 {
-                        closest_parcel.0 = None;
-                    }
-                }
-
-                parcel.4.visible = false;
-
-                // emit score event
-                score_events.send(ScoreEvent { score });
-
-                shipping_area.4.score += score;
-                shipping_area.4.received_parcels += 1;
-
-                if shipping_area.4.received_parcels % 1 == 0 {
-                    let (truck_transform, move_truck) = trucks.get(shipping_area.4.truck).unwrap();
-                    if move_truck.is_none() {
-                        commands.entity(shipping_area.4.truck).insert(MoveTruck {
-                            origin: truck_transform.translation,
-                            timer: Timer::from_seconds(3.0, TimerMode::Once),
-                        });
-                    }
+            if let Some(p) = closest_parcel.0 {
+                if p == parcel.0 {
+                    closest_parcel.0 = None;
                 }
             }
-            _ => {}
+
+            parcel.4.visible = false;
+
+            // emit score event
+            score_events.send(ScoreEvent { score });
+
+            shipping_area.4.score += score;
+            shipping_area.4.received_parcels += 1;
+
+            let (truck_transform, move_truck) = trucks.get(shipping_area.4.truck).unwrap();
+            if move_truck.is_none() {
+                commands.entity(shipping_area.4.truck).insert(MoveTruck {
+                    origin: truck_transform.translation,
+                    timer: Timer::from_seconds(3.0, TimerMode::Once),
+                });
+            }
         }
     }
 }
