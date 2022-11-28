@@ -69,7 +69,6 @@ pub fn setup_app(app: &mut App) -> &mut App {
                     cursor_visible: true,
                     mode: WindowMode::Windowed,
                     transparent: false,
-                    canvas: Some("#bevy".to_string()),
                     fit_canvas_to_parent: true,
                     ..default()
                 },
