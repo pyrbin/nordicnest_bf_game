@@ -58,10 +58,19 @@ pub fn setup_app(app: &mut App) -> &mut App {
             .set(ImagePlugin::default_nearest())
             .set(WindowPlugin {
                 window: WindowDescriptor {
-                    width: 1080.0,
-                    height: 1080.0 * 3. / 4.,
                     title: "Black Friday".to_string(),
                     present_mode: PresentMode::AutoNoVsync,
+                    width: 1280.0,
+                    height: 720.0,
+                    position: WindowPosition::Automatic,
+                    scale_factor_override: Some(1.0),
+                    resizable: true,
+                    decorations: true,
+                    cursor_visible: true,
+                    mode: WindowMode::Windowed,
+                    transparent: false,
+                    canvas: Some("#bevy".to_string()),
+                    fit_canvas_to_parent: true,
                     ..default()
                 },
 
