@@ -1,4 +1,7 @@
+use std::time::Duration;
+
 use bevy_spatial::SpatialAccess;
+use bevy_tweening::lens::TransformScaleLens;
 
 use crate::{
     prelude::*, Despawn, FaceCamera, ImageAssets, Parcel, ParcelSpawner, ParcelsSpatialTree,
@@ -29,7 +32,10 @@ impl Plugin for PlayerPlugin {
 }
 
 #[derive(Component)]
-struct Player;
+pub struct Player;
+
+#[derive(Component)]
+pub struct PlayerGfx;
 
 #[derive(Component)]
 struct ParcelStack {
@@ -48,14 +54,10 @@ fn setup(mut commands: Commands, images: Res<ImageAssets>, mut sprite_params: Sp
     // player
     commands
         .spawn((
-            Sprite3d {
-                image: images.bird.clone(),
-                pixels_per_metre: 700.,
-                partial_alpha: true,
-                unlit: true,
-                ..default()
-            }
-            .bundle(&mut sprite_params),
+            SpatialBundle {
+                transform: Transform::from_xyz(0., 0., 0.),
+                ..Default::default()
+            },
             Collider::capsule(Vec3::Y / 2., Vec3::ZERO, 0.4),
             RigidBody::KinematicVelocityBased,
             Velocity::default(),
@@ -78,6 +80,31 @@ fn setup(mut commands: Commands, images: Res<ImageAssets>, mut sprite_params: Sp
                 ParcelStack {
                     parcels_entries: vec![],
                 },
+            ));
+            b.spawn((
+                Sprite3d {
+                    image: images.bird.clone(),
+                    pixels_per_metre: 600.,
+                    partial_alpha: true,
+                    unlit: true,
+                    double_sided: true,
+                    ..default()
+                }
+                .bundle(&mut sprite_params),
+                Name::new("Player Gfx"),
+                PlayerGfx,
+                Animator::new(
+                    Tween::new(
+                        EaseFunction::QuadraticInOut,
+                        Duration::from_millis(666),
+                        TransformScaleLens {
+                            start: Vec3::new(1., 1., 1.),
+                            end: Vec3::new(0.85, 0.85, 0.85),
+                        },
+                    )
+                    .with_repeat_count(RepeatCount::Infinite)
+                    .with_repeat_strategy(RepeatStrategy::MirroredRepeat),
+                ),
             ));
         });
 }
@@ -170,11 +197,12 @@ fn parcel_stack_events(
                         transform.translation = global.translation().clone();
 
                         if let Some(pos) = mouse_pos.0 {
-                            let linvel = ((pos - transform.translation) * 1.8)
-                                .clamp_length_max(15.0)
-                                .clamp_length_min(5.0);
+                            let linvel = ((pos - transform.translation)
+                                * config::PLAYER_THROW_FACTOR)
+                                .clamp_length_max(config::PLAYER_MAX_THROW_MAQ)
+                                .clamp_length_min(2.0);
 
-                            velocity.linvel = linvel + Vec3::Y * 1.5;
+                            velocity.linvel = linvel + Vec3::Y * 7.;
                         } else {
                             velocity.linvel = Vec3::NEG_Y * 0.05;
                         }
@@ -318,7 +346,7 @@ fn update_mouse_hover_pos(
 
     if point.is_finite() {
         commands.insert_resource(MousePosition(Some(point)));
-        lines.circle(point, 0.1, 0.0, Color::WHITE);
+        lines.circle(point, 0.5, 0.0, Color::WHITE);
     } else {
         commands.insert_resource(MousePosition(None));
     }
@@ -356,11 +384,11 @@ pub fn ray_from_mouse_position(
 }
 
 fn player_movement(
-    time: Res<Time>,
     keyboard_input: Res<Input<KeyCode>>,
-    mut player: Query<&mut Velocity, With<Player>>,
+    mut player: Query<(&mut Velocity, &Transform), (With<Player>, Without<PlayerGfx>)>,
+    mut player_gfx: Query<&mut Transform, With<PlayerGfx>>,
 ) {
-    let mut vel = player.single_mut();
+    let (mut vel, transform) = player.single_mut();
     let mut delta = Vec3::ZERO;
     if keyboard_input.pressed(KeyCode::W) {
         delta -= Vec3::Z;
@@ -375,5 +403,25 @@ fn player_movement(
         delta += Vec3::X;
     }
 
-    vel.linvel = delta.normalize_or_zero() * time.delta_seconds() * config::PLAYER_SPEED;
+    // check if new position is in bounds of ground
+    let new_pos = transform.translation + delta;
+    if new_pos.x > -config::GROUND_SIZE / 2.0
+        && new_pos.x < config::GROUND_SIZE / 2.0
+        && new_pos.z > -config::GROUND_SIZE / 2.0
+        && new_pos.z < config::GROUND_SIZE / 2.0
+    {
+        delta = delta;
+    } else {
+        delta = Vec3::ZERO;
+    }
+
+    let mut gfx_transform = player_gfx.single_mut();
+
+    if delta.x > 0.0 {
+        gfx_transform.rotation = Quat::from_rotation_y(180.0_f32.to_radians());
+    } else if delta.x < 0.0 {
+        gfx_transform.rotation = Quat::from_rotation_y(0.0_f32.to_radians());
+    }
+
+    vel.linvel = delta.normalize_or_zero() * config::PLAYER_SPEED;
 }

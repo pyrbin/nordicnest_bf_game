@@ -16,63 +16,57 @@ pub struct ScoreText;
 pub struct GameTime;
 
 fn setup_ui(mut commands: Commands, font_assets: Res<FontAssets>, score: Res<Score>) {
-    commands
-        .spawn(NodeBundle {
-            style: Style {
-                flex_direction: FlexDirection::Column,
-                size: Size {
-                    width: Val::Percent(100.),
-                    height: Val::Percent(30.),
-                },
-                ..Default::default()
+    commands.spawn((
+        TextBundle::from_section(
+            format!("{:.1$}", score.score, 0).to_string(),
+            TextStyle {
+                font: font_assets.montserrat.clone(),
+                font_size: 60.0,
+                color: Color::rgb(1., 1., 1.),
             },
-            ..Default::default()
-        })
-        .with_children(|parent| {
-            parent.spawn((
-                TextBundle {
-                    text: Text {
-                        sections: vec![TextSection {
-                            value: format!("Remaining: {:.1$}", score.score, 0).to_string(),
-                            style: TextStyle {
-                                font: font_assets.fira_sans.clone(),
-                                font_size: 20.0,
-                                color: Color::rgb(0.9, 0.9, 0.9),
-                            },
-                        }],
-                        alignment: Default::default(),
-                    },
-                    style: Style {
-                        flex_grow: 1.0,
-                        ..default()
-                    },
-                    ..Default::default()
-                },
-                GameTime,
-            ));
+        )
+        .with_text_alignment(TextAlignment::CENTER)
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            position: UiRect {
+                top: Val::Px(5.0),
+                left: Val::Percent(48.0),
+                ..default()
+            },
+            max_size: Size {
+                width: Val::Px(400.),
+                height: Val::Undefined,
+            },
+            ..default()
+        }),
+        GameTime,
+    ));
 
-            parent.spawn((
-                TextBundle {
-                    text: Text {
-                        sections: vec![TextSection {
-                            value: format!("Score: {:?}", score.score).to_string(),
-                            style: TextStyle {
-                                font: font_assets.fira_sans.clone(),
-                                font_size: 20.0,
-                                color: Color::rgb(0.9, 0.9, 0.9),
-                            },
-                        }],
-                        alignment: Default::default(),
-                    },
-                    style: Style {
-                        flex_grow: 1.0,
-                        ..default()
-                    },
-                    ..Default::default()
-                },
-                ScoreText,
-            ));
-        });
+    commands.spawn((
+        TextBundle::from_section(
+            format!("{:.1$}", score.score, 0).to_string(),
+            TextStyle {
+                font: font_assets.montserrat.clone(),
+                font_size: 60.0,
+                color: Color::rgb(1., 1., 1.),
+            },
+        )
+        .with_text_alignment(TextAlignment::CENTER)
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            position: UiRect {
+                bottom: Val::Px(5.0),
+                left: Val::Percent(44.0),
+                ..default()
+            },
+            max_size: Size {
+                width: Val::Px(400.),
+                height: Val::Undefined,
+            },
+            ..default()
+        }),
+        ScoreText,
+    ));
 }
 
 fn update_ui(
@@ -86,10 +80,6 @@ fn update_ui(
     }
 
     for mut text in &mut game_text {
-        text.sections[0].value = format!(
-            "Remaining: {:.1$}",
-            time_remaining.timer.remaining_secs(),
-            0
-        );
+        text.sections[0].value = format!("{:.1$}", time_remaining.timer.remaining_secs(), 0);
     }
 }

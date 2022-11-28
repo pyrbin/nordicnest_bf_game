@@ -1,12 +1,12 @@
 use std::io::Cursor;
 
 use bevy::{window::WindowId, winit::WinitWindows};
-use bevy_blackfriday::prelude::*;
+use nordicnest_bf::prelude::*;
 use winit::window::Icon;
 
 fn main() {
     let mut app = App::new();
-    bevy_blackfriday::setup_app(&mut app);
+    nordicnest_bf::setup_app(&mut app);
     app.add_startup_system(set_window_icon);
     app.run();
 }

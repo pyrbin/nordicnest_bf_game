@@ -255,6 +255,7 @@ version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3654d60973fcde065efcfe0c9066c81a76987d28c45233998b2ccdc581dcd914"
 dependencies = [
+ "bevy_dylib",
  "bevy_internal",
 ]
 
@@ -382,24 +383,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_blackfriday"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy-inspector-egui",
- "bevy_asset_loader",
- "bevy_embedded_assets",
- "bevy_mod_outline",
- "bevy_prototype_debug_lines",
- "bevy_rapier3d",
- "bevy_spatial",
- "bevy_sprite3d",
- "image 0.24.5",
- "rand",
- "winit",
-]
-
-[[package]]
 name = "bevy_core"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -457,6 +440,15 @@ dependencies = [
  "bevy_log",
  "bevy_time",
  "bevy_utils",
+]
+
+[[package]]
+name = "bevy_dylib"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0d52cc91729fc26ea7038ad49ed773e0577688e328b6f7466be3d5070b45cea9"
+dependencies = [
+ "bevy_internal",
 ]
 
 [[package]]
@@ -887,9 +879,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_sprite3d"
-version = "2.3.0"
+version = "2.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a10dd575211d89eee5197e4b6c3ab445ef6e4b6c3bc81411e1577db0d88ae07f"
+checksum = "68e8c985b5729d03c3b9e21ec9a3ce36b1b60b703eb383d8ffb042c9a74bdf9b"
 dependencies = [
  "bevy",
 ]
@@ -956,6 +948,16 @@ dependencies = [
  "bevy_hierarchy",
  "bevy_math",
  "bevy_reflect",
+]
+
+[[package]]
+name = "bevy_tweening"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d38b2abf5518df10c3c32ee57a54b9ba7067f3bd1c137b912e286d573962145"
+dependencies = [
+ "bevy",
+ "interpolation",
 ]
 
 [[package]]
@@ -2029,6 +2031,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "hermit-abi"
+version = "0.1.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "62b467343b94ba476dcb2500d242dadbb39557df889310ac77c5d99100aaac33"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "hex"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2144,6 +2155,12 @@ dependencies = [
  "wasm-bindgen",
  "web-sys",
 ]
+
+[[package]]
+name = "interpolation"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3b7357d2bbc5ee92f8e899ab645233e43d21407573cceb37fed8bc3dede2c02"
 
 [[package]]
 name = "io-kit-sys"
@@ -2658,6 +2675,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "nordicnest_bf"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy-inspector-egui",
+ "bevy_asset_loader",
+ "bevy_embedded_assets",
+ "bevy_mod_outline",
+ "bevy_prototype_debug_lines",
+ "bevy_rapier3d",
+ "bevy_spatial",
+ "bevy_sprite3d",
+ "bevy_tweening",
+ "image 0.24.5",
+ "rand",
+ "winit",
+]
+
+[[package]]
 name = "notify"
 version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2756,6 +2792,16 @@ checksum = "578ede34cf02f8924ab9447f50c28075b4d3e5b269972345e7e0372b38c6cdcd"
 dependencies = [
  "autocfg",
  "libm",
+]
+
+[[package]]
+name = "num_cpus"
+version = "1.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f6058e64324c71e02bc2b150e4f3bc8286db6c83092132ffa3f6b1eab0f9def5"
+dependencies = [
+ "hermit-abi",
+ "libc",
 ]
 
 [[package]]
@@ -3111,6 +3157,7 @@ dependencies = [
  "num-derive",
  "num-traits",
  "parry3d",
+ "rayon",
  "rustc-hash",
  "simba",
  "vec_map",
@@ -3139,6 +3186,29 @@ name = "rawpointer"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "60a357793950651c4ed0f3f52338f53b2f809f32d83a07f72909fa13e4c6c1e3"
+
+[[package]]
+name = "rayon"
+version = "1.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e060280438193c554f654141c9ea9417886713b7acd75974c85b18a69a88e0b"
+dependencies = [
+ "crossbeam-deque",
+ "either",
+ "rayon-core",
+]
+
+[[package]]
+name = "rayon-core"
+version = "1.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cac410af5d00ab6884528b4ab69d1e8e146e8d471201800fa1b4524126de6ad3"
+dependencies = [
+ "crossbeam-channel",
+ "crossbeam-deque",
+ "crossbeam-utils",
+ "num_cpus",
+]
 
 [[package]]
 name = "rectangle-pack"

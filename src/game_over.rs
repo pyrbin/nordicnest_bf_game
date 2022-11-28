@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{FontAssets, GameState, Score};
+use crate::{FontAssets, GameState, MainCamera, Score};
 
 pub struct GameOverPlugin;
 
@@ -14,8 +14,14 @@ impl Plugin for GameOverPlugin {
 #[derive(Component)]
 pub struct Root;
 
-fn setup_menu(mut commands: Commands, font_assets: Res<FontAssets>, score: Res<Score>) {
+fn setup_menu(
+    mut commands: Commands,
+    font_assets: Res<FontAssets>,
+    score: Res<Score>,
+    query: Query<Entity, With<MainCamera>>,
+) {
     commands.spawn(Camera2dBundle::default());
+    commands.entity(query.single()).despawn();
 
     commands
         .spawn(NodeBundle {
@@ -35,7 +41,7 @@ fn setup_menu(mut commands: Commands, font_assets: Res<FontAssets>, score: Res<S
                     sections: vec![TextSection {
                         value: format!(" Score: {:?} ", score.score).to_string(),
                         style: TextStyle {
-                            font: font_assets.fira_sans.clone(),
+                            font: font_assets.montserrat.clone(),
                             font_size: 40.0,
                             color: Color::rgb(0.9, 0.9, 0.9),
                         },

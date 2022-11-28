@@ -1,3 +1,7 @@
+use std::time::Duration;
+
+use bevy_tweening::lens::TransformScaleLens;
+
 use crate::{prelude::*, ClosestParcel, Despawn, ImageAssets, ModelAssets, Parcel, Picked};
 pub struct WarehousePlugin;
 
@@ -57,16 +61,12 @@ fn setup_ground(
     // light
     commands.spawn(PointLightBundle {
         point_light: PointLight {
-            intensity: 2500.0,
+            intensity: 5500.0,
             shadows_enabled: true,
             ..default()
         },
-        transform: Transform::from_xyz(
-            -config::GROUND_SIZE / 2.0,
-            config::PARCEL_SPAWN_Y,
-            -config::GROUND_SIZE / 2.0,
-        )
-        .looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(0.0, config::PARCEL_SPAWN_Y, 0.0)
+            .looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     });
 
@@ -146,7 +146,7 @@ fn setup_ground(
                             AgentServiceCode::Budbee => Some(texture_assets.budbee.clone()),
                         },
                         alpha_mode: AlphaMode::Blend,
-                        depth_bias: 1.0,
+                        depth_bias: -100.0,
                         ..default()
                     }),
                     transform: Transform::from_xyz(pos.x * offset, pos.y * -0.5, pos.z * offset),
@@ -238,9 +238,9 @@ fn collect_parcels(
                 };
 
                 let (score, despawn_timer) = if (*parcel.3) != (*shipping_area.3) {
-                    (-1, 500)
+                    (-1, 600)
                 } else {
-                    (1, 500)
+                    (1, 600)
                 };
 
                 // despawn parcel
@@ -248,6 +248,17 @@ fn collect_parcels(
                     .entity(parcel.0)
                     .remove::<Parcel>()
                     .insert(Picked)
+                    .insert(Animator::new(
+                        Tween::new(
+                            EaseFunction::QuadraticInOut,
+                            Duration::from_millis(despawn_timer),
+                            TransformScaleLens {
+                                start: Vec3::new(1., 1., 1.),
+                                end: Vec3::new(0.0, 0.0, 0.0),
+                            },
+                        )
+                        .with_repeat_count(RepeatCount::Finite(1)),
+                    ))
                     .insert(Despawn::from_millis(despawn_timer));
 
                 if let Some(p) = closest_parcel.0 {

@@ -128,7 +128,7 @@ fn spawn_parcels(
             ),
             Parcel,
             Friction {
-                coefficient: 1.5,
+                coefficient: 2.0,
                 combine_rule: CoefficientCombineRule::Average,
             },
             OutlineBundle {
@@ -158,7 +158,7 @@ fn spawn_parcels(
 
 fn despawn_out_of_bounds(
     mut commands: Commands,
-    mut query: Query<(Entity, &Transform), With<Parcel>>,
+    mut query: Query<(Entity, &Transform), (With<Parcel>, Without<Despawn>)>,
 ) {
     const DESPAWN_HEIGHT: f32 = -30.0;
     const DISABLE_COLLISION_HEIGHT: f32 = -5.0;
