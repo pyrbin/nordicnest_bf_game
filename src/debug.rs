@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bevy_prototype_debug_lines::{DebugLines};
+use bevy_prototype_debug_lines::DebugLines;
 use std::f32::consts::{FRAC_PI_2, PI};
 
 pub trait DebugLinesExt {
