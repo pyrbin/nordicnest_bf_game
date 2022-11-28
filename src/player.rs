@@ -385,6 +385,7 @@ pub fn ray_from_mouse_position(
 
 fn player_movement(
     keyboard_input: Res<Input<KeyCode>>,
+    time: Res<Time>,
     mut player: Query<(&mut Velocity, &Transform), (With<Player>, Without<PlayerGfx>)>,
     mut player_gfx: Query<&mut Transform, With<PlayerGfx>>,
 ) {
@@ -402,6 +403,8 @@ fn player_movement(
     if keyboard_input.pressed(KeyCode::D) {
         delta += Vec3::X;
     }
+
+    delta = delta.normalize_or_zero() * config::PLAYER_SPEED * time.delta_seconds();
 
     // check if new position is in bounds of ground
     let new_pos = transform.translation + delta;
@@ -421,5 +424,5 @@ fn player_movement(
         gfx_transform.rotation = Quat::from_rotation_y(0.0_f32.to_radians());
     }
 
-    vel.linvel = delta.normalize_or_zero() * config::PLAYER_SPEED;
+    vel.linvel = delta;
 }

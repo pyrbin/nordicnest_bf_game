@@ -13,8 +13,8 @@ pub mod config {
     pub const GROUND_SIZE: f32 = 12.0;
     pub const GROUND_DEPTH: f32 = 1.0;
 
-    pub const PLAYER_SPEED: f32 = 10.0;
-    pub const PLAYER_THROW_FACTOR: f32 = 1.05;
+    pub const PLAYER_SPEED: f32 = 1000.0;
+    pub const PLAYER_THROW_FACTOR: f32 = 1.15;
     pub const PLAYER_MAX_THROW_MAQ: f32 = 12.0;
 
     pub const PARCEL_SPAWN_RATE: u64 = 3000;
