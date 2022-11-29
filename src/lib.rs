@@ -101,6 +101,10 @@ pub fn setup_app(app: &mut App) -> &mut App {
         )
         .add_system_set(SystemSet::on_enter(GameState::Ready).with_system(setup))
         .add_system_set(SystemSet::on_update(GameState::Ready).with_system(check_game_over));
+
+    app.add_system_set(SystemSet::on_enter(GameState::Loading).with_system(setup_loading))
+        .add_system_set(SystemSet::on_exit(GameState::Loading).with_system(clean_loading));
+
     app
 }
 
@@ -150,4 +154,56 @@ fn check_game_over(
     if time_remaining.timer.just_finished() {
         app_state.set(GameState::GameOver).unwrap();
     }
+}
+
+#[derive(Component)]
+pub struct LoadingRoot;
+
+fn setup_loading(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn(Camera2dBundle {
+        camera_2d: Camera2d {
+            clear_color: ClearColorConfig::Custom(Color::rgb(0.0, 0.0, 0.0)),
+            ..default()
+        },
+        ..default()
+    });
+
+    commands
+        .spawn(NodeBundle {
+            style: Style {
+                margin: UiRect::all(Val::Auto),
+                justify_content: JustifyContent::SpaceBetween,
+                align_items: AlignItems::Center,
+                flex_direction: FlexDirection::ColumnReverse,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .insert(LoadingRoot)
+        .with_children(|parent| {
+            parent.spawn(TextBundle {
+                text: Text {
+                    sections: vec![TextSection {
+                        value: format!("Loading ..."),
+                        style: TextStyle {
+                            font: asset_server.load("fonts/Montserrat-Regular.ttf").clone(),
+                            font_size: 40.0,
+                            color: Color::rgb(0.9, 0.9, 0.9),
+                        },
+                    }],
+                    alignment: Default::default(),
+                },
+                transform: Transform::from_xyz(0.0, 100.0, 0.0),
+                ..Default::default()
+            });
+        });
+}
+
+fn clean_loading(
+    mut commands: Commands,
+    root: Query<Entity, With<LoadingRoot>>,
+    cam: Query<Entity, With<Camera2d>>,
+) {
+    commands.entity(root.single()).despawn_recursive();
+    commands.entity(cam.single()).despawn_recursive();
 }
