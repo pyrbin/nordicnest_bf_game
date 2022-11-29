@@ -58,8 +58,8 @@ fn setup(mut commands: Commands, images: Res<ImageAssets>, mut sprite_params: Sp
                 transform: Transform::from_xyz(0., 0., 0.),
                 ..Default::default()
             },
-            Collider::capsule(Vec3::Y / 2., Vec3::ZERO, 0.4),
-            RigidBody::KinematicVelocityBased,
+            Collider::capsule(Vec3::Y, Vec3::ZERO, 0.4),
+            RigidBody::KinematicPositionBased,
             Velocity::default(),
             KinematicCharacterController {
                 slide: true,
@@ -88,6 +88,7 @@ fn setup(mut commands: Commands, images: Res<ImageAssets>, mut sprite_params: Sp
                     partial_alpha: true,
                     unlit: true,
                     double_sided: true,
+                    pivot: Some(Vec2::new(0.5, 0.3)),
                     ..default()
                 }
                 .bundle(&mut sprite_params),
@@ -386,10 +387,11 @@ pub fn ray_from_mouse_position(
 fn player_movement(
     keyboard_input: Res<Input<KeyCode>>,
     time: Res<Time>,
-    mut player: Query<(&mut Velocity, &Transform), (With<Player>, Without<PlayerGfx>)>,
+    _lines: ResMut<DebugLines>,
+    mut player: Query<&mut Transform, (With<Player>, Without<PlayerGfx>)>,
     mut player_gfx: Query<&mut Transform, With<PlayerGfx>>,
 ) {
-    let (mut vel, transform) = player.single_mut();
+    let mut transform = player.single_mut();
     let mut delta = Vec3::ZERO;
     if keyboard_input.pressed(KeyCode::W) {
         delta -= Vec3::Z;
@@ -408,12 +410,14 @@ fn player_movement(
 
     // check if new position is in bounds of ground
     let new_pos = transform.translation + delta;
-    if new_pos.x <= -config::GROUND_SIZE / 2.0 - 2.0
-        || new_pos.x >= config::GROUND_SIZE / 2.0 + 2.0
-        || new_pos.z <= -config::GROUND_SIZE / 2.0 - 2.0
-        || new_pos.z >= config::GROUND_SIZE / 2.0 + 2.0
+    if new_pos.x <= -config::GROUND_SIZE / 2.0 - 0.5 || new_pos.x >= config::GROUND_SIZE / 2.0 + 0.5
     {
-        delta = Vec3::ZERO;
+        delta.x = 0.0;
+    }
+
+    if new_pos.z <= -config::GROUND_SIZE / 2.0 - 0.5 || new_pos.z >= config::GROUND_SIZE / 2.0 + 0.5
+    {
+        delta.z = 0.0;
     }
 
     let mut gfx_transform = player_gfx.single_mut();
@@ -424,5 +428,5 @@ fn player_movement(
         gfx_transform.rotation = Quat::from_rotation_y(0.0_f32.to_radians());
     }
 
-    vel.linvel = delta;
+    transform.translation += delta;
 }
